@@ -22,7 +22,7 @@ This repository contains a Python script for processing RAW image files into TIF
 
 1. Clone this repository:
 ```bash
-git clone [https://github.com/jpalachniak/RAW_TO_TIFF.git]
+git clone https://github.com/jpalachniak/RAW_TO_TIFF.git
 ```
 
 2. Install required dependencies:
@@ -112,7 +112,7 @@ process_path(
 
 ## License
 
-[Your chosen license]
+See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 ## Contributing
 
