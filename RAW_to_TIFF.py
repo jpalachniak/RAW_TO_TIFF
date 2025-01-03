@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 
 def read_raw_parameters(file_path):
     """
-    Wczytuje parametry obrazu RAW z pierwszych 5 wartości w pliku.
+    Reads RAW image parameters from the first 5 values in the file.
 
-    :param file_path: Ścieżka do pliku RAW.
-    :return: Tuple zawierający (szerokość, wysokość, data_type, header_size).
+    :param file_path: Path to the RAW file.
+    :return: Tuple containing (width, height, data_type, header_size).
     """
     with open(file_path, 'rb') as file:
-        # Zakładamy, że parametry są zapisane w formacie uint16.
+        # Assumes that parameters are stored in uint16 format.
         parameters = np.fromfile(file, dtype=np.uint16, count=5)
 
     width = parameters[0]
@@ -25,18 +25,18 @@ def read_raw_parameters(file_path):
 
 def process_raw_file(file_path, width=-1, height=-1, pixel_type=-1, header_size=-1, save_tiff=True, tiff_path=None):
     """
-    Przetwarza plik RAW na obraz, wczytując parametry z pliku, jeśli są ustawione na -1,
-    i opcjonalnie zapisuje jako TIFF.
+    Processes a RAW file into an image, reading parameters from the file if set to -1,
+    and optionally saves it as a TIFF.
 
-    :param file_path: Ścieżka do pliku RAW.
-    :param width: Szerokość obrazu lub -1.
-    :param height: Wysokość obrazu lub -1.
-    :param pixel_type: Typ danych piksela (16 lub 8) lub -1.
-    :param header_size: Rozmiar nagłówka w bajtach lub -1.
-    :param save_tiff: Czy zapisać wynik jako plik TIFF.
-    :param tiff_path: Ścieżka do zapisu pliku TIFF.
+    :param file_path: Path to the RAW file.
+    :param width: Image width or -1.
+    :param height: Image height or -1.
+    :param pixel_type: Pixel data type (16 or 8) or -1.
+    :param header_size: Header size in bytes or -1.
+    :param save_tiff: Whether to save the result as a TIFF file.
+    :param tiff_path: Path to save the TIFF file.
     """
-    # Jeśli którykolwiek z parametrów jest ustawiony na -1, wczytaj parametry z pliku
+    # If any parameter is set to -1, read parameters from the file
     if width == -1 or height == -1 or pixel_type == -1 or header_size == -1:
         width, height, data_type, header_size = read_raw_parameters(file_path)
     else:
@@ -51,41 +51,41 @@ def process_raw_file(file_path, width=-1, height=-1, pixel_type=-1, header_size=
     try:
         image_data = raw_data.reshape(image_dims)
     except ValueError as e:
-        print(f"Błąd: {e}. Sprawdź podane wymiary i rozmiar nagłówka.")
+        print(f"Error: {e}. Check the provided dimensions and header size.")
         return
 
     if save_tiff:
-        # Upewnij się, że ścieżka do zapisu TIFF jest poprawna i zawiera rozszerzenie
+        # Ensure that the TIFF save path is valid and includes an extension
         if tiff_path is None:
             tiff_path = os.path.splitext(file_path)[0] + '.tiff'
-        elif os.path.isdir(tiff_path):  # Jeśli tiff_path jest folderem, dodaj nazwę pliku
+        elif os.path.isdir(tiff_path):  # If tiff_path is a folder, add the file name
             tiff_path = os.path.join(tiff_path, os.path.basename(os.path.splitext(file_path)[0] + '.tiff'))
 
-        # Teraz tiff_path powinna być prawidłową ścieżką do pliku, zawierać nazwę pliku i rozszerzenie .tiff
+        # Now tiff_path should be a valid file path containing the file name and .tiff extension
         Image.fromarray(image_data).save(tiff_path)
-        print(f"Zapisano plik TIFF: {tiff_path}")
+        print(f"TIFF file saved: {tiff_path}")
     else:
-        # Wyświetl obraz
+        # Display the image
         Image.fromarray(image_data).show()
 
 
 def display_image(image_data):
-    # Skalowanie danych do 8-bitowego zakresu
+    # Scale data to 8-bit range
     min_val, max_val = np.min(image_data), np.max(image_data)
-    scaled_data = (image_data - min_val) / (max_val - min_val)  # Normalizacja do zakresu [0, 1]
-    display_data = (scaled_data * 255).astype(np.uint8)  # Przeskalowanie do zakresu [0, 255]
+    scaled_data = (image_data - min_val) / (max_val - min_val)  # Normalize to range [0, 1]
+    display_data = (scaled_data * 255).astype(np.uint8)  # Scale to range [0, 255]
     plt.imshow(display_data, cmap='gray')
-    plt.title('Obraz RAW przeskalowany')
+    plt.title('Scaled RAW Image')
     plt.show()
 
 
 def process_path(path, save_tiff=True, display_images=False, width=-1, height=-1, pixel_type=-1, header_size=-1,
                  tiff_path=None):
     """
-    Przetwarza plik lub wszystkie pliki RAW w folderze na obrazy TIFF i opcjonalnie wyświetla je.
+    Processes a file or all RAW files in a folder into TIFF images and optionally displays them.
     """
     if os.path.isdir(path):
-        # Przetwarzanie wszystkich plików RAW w folderze
+        # Process all RAW files in the folder
         for filename in os.listdir(path):
             if filename.lower().endswith('.raw'):
                 file_path = os.path.join(path, filename)
@@ -102,7 +102,7 @@ def process_path(path, save_tiff=True, display_images=False, width=-1, height=-1
                     display_image(raw_data)
 
     elif os.path.isfile(path):
-        # Przetwarzanie pojedynczego pliku RAW
+        # Process a single RAW file
         output_tiff_path = tiff_path if tiff_path else os.path.splitext(path)[0] + '.tiff'
         process_raw_file(path, width, height, pixel_type, header_size, save_tiff=save_tiff, tiff_path=output_tiff_path)
         if display_images:
@@ -113,27 +113,27 @@ def process_path(path, save_tiff=True, display_images=False, width=-1, height=-1
                 raw_data = np.fromfile(file, dtype=data_type).reshape(image_dims)
             display_image(raw_data)
     else:
-        print(f"Podana ścieżka {path} nie jest ani folderem, ani plikiem.")
+        print(f"The provided path {path} is neither a folder nor a file.")
 
 
 """
-Path to może  być ścieżka do folderu lub do
-konkretnego pliku RAW np. C:\Pliki\Praca Inżynierska\Projections\python_test_05_0007.raw
-albo C:\Pliki\Praca Inżynierska\Projections
-jeśli to ścieżka do folderu, to przetworzy wszystkie zdjęcia.
-Target_path - miejsce zapisu TIFFów, jeśli "None" to zapisze w folderze z RAWami. 
+Path can be a path to a folder or
+a specific RAW file, e.g., C:\Files\Engineering\Projections\python_test_05_0007.raw
+or C:\Files\Engineering\Projections.
+If it is a folder path, all images will be processed.
+Target_path - location to save TIFFs. If "None", they will be saved in the RAW folder. 
 """
 
-path = r'C:\Pliki\Praca Inżynierska\Projections'
+path = r'C:\Files\Engineering\Projections'
 target_path = None
 process_path(path,
              save_tiff=True,
              display_images=False,
              tiff_path=target_path)
 """
-save_tiff = True - zapisuje pliki RAW jako TIFF,
-display_images=True - pokazuje każde pojedyczne zdjęcie na ekranie.
-Jeśli wartości źle się wczytają, można tak:
+save_tiff = True - saves RAW files as TIFF,
+display_images = True - displays each single image on the screen.
+If values are not read correctly, use:
 """
 # process_path(path, save_tiff=True,
 #              display_images=False,
